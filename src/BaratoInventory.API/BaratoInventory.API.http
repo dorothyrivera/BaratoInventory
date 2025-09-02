@@ -1,0 +1,6 @@
+@BaratoInventory.API_HostAddress = http://localhost:5073
+
+GET {{BaratoInventory.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,49 @@
+# Build results
+bin/
+obj/
+out/
+*.exe
+*.dll
+*.log
+*.vspscc
+*.user
+*.suo
+*.cache
+*.pdb
+
+# Visual Studio
+.vs/
+*.userosscache
+*.userprefs
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+*.lock.json
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# SQL Server
+*.mdf
+*.ldf
+*.ndf
+
+# Redis dump
+dump.rdb
+appendonly.aof
+
+# Logs
+logs/
+*.log
+
+# Secrets
+secrets.json
+appsettings.*.json
+
+# Others
+Thumbs.db
+*.DS_Store

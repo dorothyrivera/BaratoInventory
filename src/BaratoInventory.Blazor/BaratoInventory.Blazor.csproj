@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<ItemGroup>
+		<None Update="Dockerfile" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\BaratoInventory.Core\BaratoInventory.Core.csproj" />
+		<ProjectReference Include="..\BaratoInventory.Infrastructure\BaratoInventory.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Blazor.Bootstrap" Version="3.4.0" />
+		<PackageReference Include="Blazored.Modal" Version="7.3.1" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+</Project>
