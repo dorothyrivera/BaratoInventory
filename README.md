@@ -54,7 +54,11 @@ Versioning|GitHub
 ## Getting Started
 ### 1. Clone the Repository
 ### 2. Run with Docker Compose
-Make sure Docker is installed. Then in **Visual Studio**, right-click the solution **`BaratoInventory`** in **Solution Explorer**, then click **Open in Terminal**, and run:
+Make sure Docker is installed and opened. Then in **Visual Studio**, right-click the solution **`BaratoInventory`** in **Solution Explorer**, then click **Open in Terminal**, and run:
+```bash
+docker-compose up -d
+```
+Then run:
 ```bash
 docker-compose up --build
 ```
