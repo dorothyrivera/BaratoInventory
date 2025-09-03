@@ -15,12 +15,14 @@ public class ProductsController : ControllerBase
         _service = service;
     }
 
-    // GET /api/v1/products?search=phone&sort=Price&order=asc
+    // GET /api/v1/products?search=phone&sort=Price&order=asc&page=1&pageSize=10
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Product>>> GetAll(
+    public async Task<ActionResult<PagedResult<Product>>> GetAll(
         string? search,
         string? sort = "Name",
-        string? order = "asc")
+        string? order = "asc",
+        int page = 1,
+        int pageSize = 10)
     {
         var products = await _service.GetAllAsync();
 
@@ -42,7 +44,27 @@ public class ProductsController : ControllerBase
             _ => products
         };
 
-        return Ok(products);
+        var totalItems = products.Count;
+        var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages > 0 ? totalPages : 1;
+
+        var pagedItems = products
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        var result = new PagedResult<Product>
+        {
+            Items = pagedItems,
+            TotalCount = totalItems,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = totalPages
+        };
+
+        return Ok(result);
     }
 
     // GET /api/v1/products/{id}

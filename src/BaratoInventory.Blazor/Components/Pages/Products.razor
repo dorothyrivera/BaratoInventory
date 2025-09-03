@@ -10,7 +10,9 @@
 <div class="mb-3 d-flex justify-content-between align-items-center">
     <div class="input-group w-50">
         <input class="form-control" placeholder="Search..." @bind="searchTerm" />
-        <button class="btn btn-secondary" @onclick="SearchProducts">Search</button>
+        <button class="btn btn-secondary" @onclick="SearchProducts">
+            <i class="bi bi-search"></i>
+        </button>
         <button class="btn btn-outline-secondary" @onclick="ClearSearch">Clear</button>
     </div>
     <Button Color="ButtonColor.Primary" @onclick="ShowCreateModal">Add Product</Button>
@@ -25,11 +27,18 @@
 }
 
 <table class="table table-striped table-hover">
+    <colgroup>
+        <col style="width: 1%; white-space: nowrap;" />
+        <col style="width: 24%;" />
+        <col style="width: 25%;" />
+        <col style="width: 25%;" />
+        <col style="width: 25%;" />
+    </colgroup>
     <thead class="table-light">
         <tr>
             <th></th>
             <th>
-                <button class="btn btn-link text-decoration-none p-0" @onclick="() => SortBy(nameof(ProductDto.Name))">
+                <button class="btn btn-link text-decoration-none p-0" @onclick="async () => await SortBy(nameof(ProductDto.Name))">
                     Name
                     @if (sortColumn == nameof(ProductDto.Name))
                     {
@@ -38,7 +47,7 @@
                 </button>
             </th>
             <th>
-                <button class="btn btn-link text-decoration-none p-0" @onclick="() => SortBy(nameof(ProductDto.Category))">
+                <button class="btn btn-link text-decoration-none p-0" @onclick="async () => await SortBy(nameof(ProductDto.Category))">
                     Category
                     @if (sortColumn == nameof(ProductDto.Category))
                     {
@@ -47,7 +56,7 @@
                 </button>
             </th>
             <th>
-                <button class="btn btn-link text-decoration-none p-0" @onclick="() => SortBy(nameof(ProductDto.Price))">
+                <button class="btn btn-link text-decoration-none p-0" @onclick="async () => await SortBy(nameof(ProductDto.Price))">
                     Price
                     @if (sortColumn == nameof(ProductDto.Price))
                     {
@@ -56,7 +65,7 @@
                 </button>
             </th>
             <th>
-                <button class="btn btn-link text-decoration-none p-0" @onclick="() => SortBy(nameof(ProductDto.Quantity))">
+                <button class="btn btn-link text-decoration-none p-0" @onclick="async () => await SortBy(nameof(ProductDto.Quantity))">
                     Quantity
                     @if (sortColumn == nameof(ProductDto.Quantity))
                     {
@@ -80,7 +89,7 @@
             @foreach (var p in products)
             {
                 <tr>
-                    <td class="text-center">
+                    <td class="text-center" style="width:1%; white-space:nowrap;">
                         <div class="dropdown">
                             <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="actionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 Actions
@@ -94,13 +103,38 @@
                     </td>
                     <td>@p.Name</td>
                     <td>@p.Category</td>
-                    <td>@p.Price</td>
-                    <td>@p.Quantity</td>
+                    <td>₱@p.Price.ToString("N2")</td>
+                    <td>@p.Quantity pcs</td>
                 </tr>
             }
         }
     </tbody>
 </table>
+
+<nav>
+    <ul class="pagination justify-content-end">
+        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+            <button class="page-link" @onclick="() => GoToPage(1)">&laquo;</button>
+        </li>
+        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+            <button class="page-link" @onclick="() => GoToPage(currentPage - 1)">&lt;</button>
+        </li>
+
+        @for (int i = 1; i <= totalPages; i++)
+        {
+            <li class="page-item @(currentPage == i ? "active" : "")">
+                <span class="page-link">@i</span> @* Not clickable *@
+            </li>
+        }
+
+        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+            <button class="page-link" @onclick="() => GoToPage(currentPage + 1)">&gt;</button>
+        </li>
+        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+            <button class="page-link" @onclick="() => GoToPage(totalPages)">&raquo;</button>
+        </li>
+    </ul>
+</nav>
 
 <Modal @ref="productModal" Title="@modalTitle">
     <BodyTemplate>
@@ -108,11 +142,15 @@
             <DataAnnotationsValidator />
             <ValidationSummary />
             <div class="mb-2">
-                <label>Name *</label>
+                <label>
+                    Name @if (!isViewMode) { <span class="text-danger">*</span> }
+                </label>
                 <InputText class="form-control" @bind-Value="currentProduct.Name" readonly="@isViewMode" />
             </div>
             <div class="mb-2">
-                <label>Category *</label>
+                <label>
+                    Category @if (!isViewMode) { <span class="text-danger">*</span> }
+                </label>
                 <InputText class="form-control" @bind-Value="currentProduct.Category" readonly="@isViewMode" />
             </div>
             <div class="mb-2">
@@ -157,6 +195,10 @@
     private string notificationMessage = "";
     private bool sortAscending = true;
     private bool isViewMode = false;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages = 1;
+    private int totalItems = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -168,11 +210,15 @@
         try
         {
             var order = sortAscending ? "asc" : "desc";
-            products = await ProductApiClient.GetAllAsync(searchTerm, sortColumn, order);
+            var result = await ProductApiClient.GetAllAsync(searchTerm, sortColumn, order, currentPage, pageSize);
+
+            products = result.Items;
+            totalItems = result.TotalCount;
+            totalPages = result.TotalPages;
         }
         catch (Exception ex)
         {
-            await ShowNotification("Error loading products: " + ex.Message, "alert-danger", 3000);
+            _ = ShowNotification("Error loading products: " + ex.Message, "alert-danger", 5000);
         }
     }
 
@@ -191,6 +237,7 @@
     {
         currentProduct = new ProductDto();
         modalTitle = "Add Product";
+        isViewMode = false;
         productModal.ShowAsync();
     }
 
@@ -220,6 +267,7 @@
             Quantity = p.Quantity
         };
         modalTitle = "Edit Product";
+        isViewMode = false;
         productModal.ShowAsync();
     }
 
@@ -229,20 +277,30 @@
         {
             if (currentProduct.Id == 0)
             {
-                await ProductApiClient.CreateAsync(currentProduct);
-                await ShowNotification("Product added successfully.", "alert-success", 3000);
+                var createdProduct = await ProductApiClient.CreateAsync(currentProduct);
+
+                currentPage = 1;
+
+                await LoadProducts();
+
+                await productModal.HideAsync();
+                _ = ShowNotification("Product added successfully.", "alert-success", 5000);
             }
             else
             {
                 await ProductApiClient.UpdateAsync(currentProduct);
-                await ShowNotification("Product updated successfully.", "alert-success", 3000);
+
+                var index = products.FindIndex(p => p.Id == currentProduct.Id);
+                if (index != -1)
+                    products[index] = currentProduct;
+
+                await productModal.HideAsync();
+                _ = ShowNotification("Product updated successfully.", "alert-success", 5000);
             }
-            await productModal.HideAsync();
-            await LoadProducts();
         }
         catch (Exception ex)
         {
-            await ShowNotification("Error saving product: " + ex.Message, "alert-danger", 3000);
+            _ = ShowNotification("Error saving product: " + ex.Message, "alert-danger", 5000);
         }
     }
 
@@ -259,17 +317,14 @@
             try
             {
                 await ProductApiClient.DeleteAsync(productToDelete.Id);
-                await ShowNotification("Product deleted successfully.", "alert-success", 3000);
+                await deleteModal.HideAsync();
+                productToDelete = null;
                 await LoadProducts();
+                _ = ShowNotification("Product deleted successfully.", "alert-success", 5000);
             }
             catch (Exception ex)
             {
-                await ShowNotification("Error deleting product: " + ex.Message, "alert-danger", 3000);
-            }
-            finally
-            {
-                productToDelete = null;
-                await deleteModal.HideAsync();
+                _ = ShowNotification("Error deleting product: " + ex.Message, "alert-danger", 5000);
             }
         }
     }
@@ -286,7 +341,7 @@
         await productModal.HideAsync();
     }
 
-    private async void SortBy(string column)
+    private async Task SortBy(string column)
     {
         if (sortColumn == column)
             sortAscending = !sortAscending;
@@ -307,5 +362,13 @@
         await Task.Delay(duration);
         notificationMessage = null;
         StateHasChanged();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        if (page == currentPage) return;
+
+        currentPage = page;
+        await LoadProducts();
     }
 }

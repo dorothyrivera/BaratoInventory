@@ -1,4 +1,5 @@
 ﻿using BaratoInventory.Core.DTOs;
+using BaratoInventory.Core.Models;
 
 namespace BaratoInventory.Blazor.Services
 {
@@ -11,10 +12,16 @@ namespace BaratoInventory.Blazor.Services
             _http = http;
         }
 
-        public async Task<List<ProductDto>> GetAllAsync(string search = "", string sort = "Name", string order = "asc")
+        public async Task<PagedResult<ProductDto>> GetAllAsync(
+            string search = "",
+            string sort = "Name",
+            string order = "asc",
+            int page = 1,
+            int pageSize = 10)
         {
-            var url = $"api/v1/products?search={search}&sort={sort}&order={order}";
-            return await _http.GetFromJsonAsync<List<ProductDto>>(url) ?? new List<ProductDto>();
+            var url = $"api/v1/products?search={search}&sort={sort}&order={order}&page={page}&pageSize={pageSize}";
+            return await _http.GetFromJsonAsync<PagedResult<ProductDto>>(url)
+                   ?? new PagedResult<ProductDto>();
         }
 
         public async Task<ProductDto?> GetByIdAsync(int id) =>
